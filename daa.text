@@ -1,0 +1,457 @@
+Practical 1 
+VIVA QUESTIONS & ANSWERS
+Question	Answer
+1. What is recursion?	When a function calls itself until a base condition is met.
+2. What is Fibonacci series?	A sequence where each term = sum of the previous two terms.
+3. What are base conditions in Fibonacci recursion?	F(0) = 0, F(1) = 1
+4. Which method is faster — recursive or iterative?	Iterative (O(n) time)
+5. Why is recursive slow?	Because it recomputes the same values many times (exponential calls).
+6. What is time complexity of recursive Fibonacci?	O(2ⁿ)
+7. What is space complexity of recursive Fibonacci?	O(n) due to call stack.
+8. What is time complexity of iterative Fibonacci?	O(n)
+9. What is space complexity of iterative Fibonacci?	O(1)
+10. What is the advantage of recursion?	Simple and clear logic; good for problems with repeated substructure.
+11. What is the disadvantage of recursion?	High memory usage and slower execution.
+12. What is difference between recursion and iteration?	Recursion uses function calls; iteration uses loops.
+
+Practucal 2
+🧠 Step 1: Understanding the Problem — What is Huffman Encoding?
+👉 Huffman Encoding is a lossless data compression algorithm.
+It reduces the size of data without losing any information.
+Used in ZIP, JPEG, MP3, etc.
+
+🔹 Example:
+Suppose we have a text:
+AABBCDEEE
+Let’s count the frequency of each character:
+Character	Frequency
+A	2
+B	2
+C	1
+D	1
+E	3
+We want to represent this text in binary (0s and 1s).
+Normally, if we use 3 bits per character (since 5 chars → need at least 3 bits), we need:
+➡️ 9 characters × 3 bits = 27 bits.
+But some characters (like E) appear more often than others,
+so we can assign shorter codes to frequent characters,
+and longer codes to less frequent ones.
+This is where Huffman Encoding comes in!
+
+🧩 Step 2: The Greedy Approach
+Huffman follows a Greedy Algorithm —
+At every step, it picks the two smallest frequency nodes,
+and combines them into one.
+
+🔹 Steps of Huffman Algorithm
+	1. Create a leaf node for each unique character with its frequency.
+	2. Insert all nodes into a priority queue (min-heap) ordered by frequency.
+	3. While more than one node remains:
+		○ Remove the two smallest nodes.
+		○ Create a new node with frequency = sum of both.
+		○ The two nodes become left (0) and right (1) child.
+		○ Insert the new node back into the heap.
+	4. The remaining node is the root of the Huffman Tree.
+	5. Traverse the tree:
+		○ Left edge → add ‘0’
+		○ Right edge → add ‘1’
+		○ Leaf nodes give the final Huffman codes.
+
+🔹 Example: Let’s build it step by step
+Symbol	Frequency
+A	5
+B	9
+C	12
+D	13
+E	16
+F	45
+
+Step 1: Take two smallest → A(5) and B(9) → combine → 14
+Now new set:
+14, 12, 13, 16, 45
+Step 2: Take 12 and 13 → combine → 25
+New set: 14, 16, 25, 45
+Step 3: Take 14 and 16 → combine → 30
+New set: 25, 30, 45
+Step 4: Take 25 and 30 → combine → 55
+New set: 45, 55
+Step 5: Take 45 and 55 → combine → 100 → root node
+
+Now assign:
+	• Left edge → 0
+	• Right edge → 1
+You get codes like:
+Symbol	Huffman Code
+F	0
+C	100
+D	101
+A	1100
+B	1101
+E	111
+✅ Total encoded bits < original bits → compression achieved!
+
+⚙️ Step 3: Why Greedy?
+Because Huffman always chooses the two smallest frequencies first —
+a locally optimal choice that leads to a globally optimal solution
+(minimum cost of encoding).
+
+🧮 Step 4: Time and Space Complexity
+Operation	Complexity
+Building Huffman tree	O(n log n)
+Encoding traversal	O(n)
+Total	O(n log n)
+Space complexity	O(n) for storing the tree and codes
+
+🎓 Step 5: Viva Questions (with Answers)
+Question	Answer
+1️⃣ What is Huffman Encoding?	A lossless data compression algorithm that assigns variable-length binary codes to characters based on their frequency.
+2️⃣ Which algorithmic strategy does it use?	Greedy Algorithm.
+3️⃣ What is the main idea behind Huffman Encoding?	Assign shorter codes to more frequent characters and longer codes to less frequent ones.
+4️⃣ What is the time complexity of Huffman Encoding?	O(n log n).
+5️⃣ What is the space complexity?	O(n).
+6️⃣ What data structure is used?	Min-Heap (Priority Queue).
+7️⃣ Where is Huffman used in real life?	File compression (ZIP), image compression (JPEG), text encoding.
+8️⃣ Is Huffman Encoding unique?	No, multiple trees can represent the same encoding cost, but total encoded length will be same.
+9️⃣ What happens if all frequencies are equal?	Then all codes will have the same length — no compression achieved.
+🔟 What is difference between prefix code and normal code?	Prefix codes ensure no code is prefix of another — used in Huffman encoding.
+
+Perfect ✅ — let’s do the same as before:
+First, I’ll explain the complete theory of Fractional Knapsack Problem — step by step, with examples, greedy logic, formulas, complexity, and viva questions.
+Then, once you fully understand it, we’ll move on to Python and Java code.
+
+🧠 Practical 3: Fractional Knapsack Problem (Using Greedy Method)
+
+🎯 Problem Statement
+	Given a set of items, each with a weight and a value, determine the maximum value you can put in a knapsack (bag) of a fixed capacity W.
+But here’s the twist:
+👉 You can break items into smaller parts — you can take a fraction of an item.
+That’s why it’s called Fractional Knapsack.
+
+🧩 Real-Life Example
+Imagine you’re a thief who breaks into a jewelry shop 😅
+You have a bag that can carry W = 50 kg.
+There are gold bars, diamonds, and silver coins — each with:
+	• a weight
+	• and a value
+You can even take half a gold bar or quarter of a diamond if needed.
+So your goal is to maximize the total value of items in your bag.
+
+📘 Example
+Item	Value	Weight	Value/Weight Ratio
+1	60	10	6
+2	100	20	5
+3	120	30	4
+Knapsack capacity = W = 50
+
+Step 1️⃣ — Calculate Value/Weight ratio
+We already have:
+Item 1: 6
+Item 2: 5
+Item 3: 4
+Step 2️⃣ — Sort items in descending order of Value/Weight
+Order	Item	Ratio
+1	Item 1	6
+2	Item 2	5
+3	Item 3	4
+
+Step 3️⃣ — Start filling the knapsack
+🪣 Capacity = 50
+Step	Item	Weight Taken	Remaining Capacity	Value Added	Total Value
+1	Item 1 (10kg)	10	40	60	60
+2	Item 2 (20kg)	20	20	100	160
+3	Item 3 (30kg)	Only 20 (fractional)	0	(20/30)*120 = 80	240
+✅ Maximum total value = 240
+
+⚙️ Step 4: Greedy Strategy
+At every step:
+	1. Choose the item with maximum (value/weight) ratio.
+	2. Take as much as possible (whole or fractional) until the knapsack is full.
+That’s why it’s called a Greedy Method —
+you always choose the best local choice (max ratio) at each step.
+
+🧮 Step 5: Formula (if needed)
+If you take a fraction x of an item:
+[
+\text{Total value} = \sum (x_i \times value_i)
+]
+where
+[
+0 ≤ x_i ≤ 1
+]
+and
+[
+\sum (x_i \times weight_i) ≤ W
+]
+
+⏱️ Step 6: Time and Space Complexity
+Task	Complexity
+Sorting items by ratio	O(n log n)
+Selecting items	O(n)
+Total Time	O(n log n)
+Space	O(1) (or O(n) if using arrays)
+
+🧮 Step 7: Characteristics
+Property	Description
+Algorithm Type	Greedy
+Fraction allowed?	✅ Yes
+Always optimal?	✅ Yes
+Data structure used	Array / List
+Sorting criteria	Value/Weight ratio
+
+📘 Step 8: Difference — Fractional vs 0/1 Knapsack
+Feature	Fractional Knapsack	0/1 Knapsack
+Fraction allowed?	✅ Yes	❌ No
+Approach	Greedy	Dynamic Programming
+Optimal for?	Fractional	Whole items only
+Complexity	O(n log n)	O(nW)
+Example	You can take half an apple	You must take or leave the apple
+
+🎓 Step 9: Viva Questions (with Answers)
+Question	Answer
+1️⃣ What is the Knapsack Problem?	It’s an optimization problem where we aim to maximize total value under a weight constraint.
+2️⃣ What is the difference between 0/1 and Fractional Knapsack?	In fractional, we can take parts of items; in 0/1, we can’t.
+3️⃣ What algorithmic technique is used in Fractional Knapsack?	Greedy Algorithm.
+4️⃣ What is the greedy choice here?	Selecting the item with the highest value/weight ratio.
+5️⃣ Is the greedy solution always optimal?	Yes, for the fractional case.
+6️⃣ What is time complexity?	O(n log n) due to sorting.
+7️⃣ Can we use this for 0/1 Knapsack?	No, greedy fails there.
+8️⃣ Why sorting is needed?	To pick items in descending order of value/weight ratio.
+9️⃣ What happens if all ratios are equal?	Any order will give the same result.
+🔟 Give one real-life example	Filling a fuel tank with different fuel grades or carrying valuable metals of different weights.
+
+Perfect 👍
+Let’s follow the same approach: first the complete theory of 0/1 Knapsack Problem, step by step — including
+concept, real-life example, working, formula, dynamic programming explanation, complexity, and viva questions.
+After that, we’ll do Python and Java codes with detailed explanations.
+
+🧠 Practical 4: 0/1 Knapsack Problem (Using Dynamic Programming)
+
+🎯 Problem Statement
+	Given n items, each with a weight and a value, find the maximum total value you can carry in a knapsack (bag) of capacity W.
+But unlike the fractional version:
+🚫 You cannot take fractions —
+You either take the whole item (1) or leave it (0).
+That’s why it’s called 0/1 Knapsack.
+
+🧩 Real-Life Example
+Suppose you are going camping 🎒
+You have a bag that can carry maximum weight = 50 kg.
+There are several items (like food, clothes, tent, camera, etc.) — each has a weight and a value (usefulness).
+You can’t take half a tent or half a camera, right? 😅
+So, you have to choose the combination of whole items that gives the maximum total value.
+
+📘 Example
+Item	Value	Weight
+1	60	10
+2	100	20
+3	120	30
+Knapsack capacity, W = 50
+
+🧮 Step 1 — All Possible Combinations
+You can take each item or not.
+So for 3 items → there are 2³ = 8 possibilities.
+We want the maximum total value where the total weight ≤ W.
+Possible selections:
+Items Taken	Total Weight	Total Value
+None	0	0
+1	10	60
+2	20	100
+3	30	120
+1, 2	30	160
+1, 3	40	180
+2, 3	50	220
+1, 2, 3	60 ❌	- (Exceeds 50)
+✅ So the best combination is items 2 and 3 → Total Value = 220
+
+⚙️ Step 2 — Dynamic Programming Approach
+Since checking all combinations is slow for large n (O(2^n)),
+we use Dynamic Programming (DP) to optimize.
+Idea:
+We use a table dp[i][w] which stores the maximum value we can get
+with the first i items and capacity w.
+
+🧮 Step 3 — DP Formula
+For every item i and weight limit w:
+[
+dp[i][w] =
+\begin{cases}
+0 & \text{if } i=0 \text{ or } w=0 \
+dp[i-1][w] & \text{if } weight[i] > w \
+\max(value[i] + dp[i-1][w - weight[i]], dp[i-1][w]) & \text{otherwise}
+\end{cases}
+]
+
+Explanation:
+Term	Meaning
+dp[i-1][w]	Value without taking current item
+value[i] + dp[i-1][w - weight[i]]	Value if we take the item
+max()	Choose whichever gives more value
+
+🧾 Step 4 — DP Table Example
+i (items)	w=0	10	20	30	40	50
+0	0	0	0	0	0	0
+1	0	60	60	60	60	60
+2	0	60	100	160	160	160
+3	0	60	100	160	180	220
+✅ Maximum Value = 220
+
+⏱️ Step 5 — Time and Space Complexity
+Aspect	Complexity
+Time	O(n × W)
+Space	O(n × W) (can be optimized to O(W))
+
+🧠 Step 6 — Properties
+Property	Description
+Algorithm Type	Dynamic Programming
+Fraction allowed?	❌ No
+Greedy works?	❌ No
+Optimal?	✅ Yes
+Approach	Bottom-Up (or Top-Down recursion + memoization)
+
+🧩 Step 7 — Branch and Bound (Alternative)
+Another approach for 0/1 Knapsack is Branch and Bound, which is:
+	• Based on backtracking
+	• Explores decision tree (include/exclude items)
+	• Uses upper bound to prune unpromising branches
+(doesn’t check every possibility)
+But for academic and practical use — Dynamic Programming is preferred for implementation.
+
+🎓 Step 8 — Viva Questions (with Answers)
+Question	Answer
+1️⃣ What is 0/1 Knapsack Problem?	It’s a problem where each item can be either taken fully (1) or left (0) to maximize value.
+2️⃣ What is the constraint?	The total weight must not exceed the given capacity.
+3️⃣ Why can’t greedy algorithm be used here?	Because taking the item with best ratio may not always lead to the global optimum when fractions are not allowed.
+4️⃣ Which approach gives the optimal result?	Dynamic Programming.
+5️⃣ What is the state relation (formula)?	dp[i][w] = max(dp[i-1][w], value[i] + dp[i-1][w - weight[i]])
+6️⃣ What are base cases?	dp[0][w] = 0 and dp[i][0] = 0
+7️⃣ What is the time complexity?	O(n × W)
+8️⃣ How can we reduce space complexity?	Use a 1D array of size W+1.
+9️⃣ Is the problem NP-hard?	Yes, it is NP-hard in general, but solvable using DP for smaller W.
+🔟 Give a real-world example	Selecting investment options or scheduling tasks with limited time/resources.
+
+Perfect 👑
+Let’s do the complete theory explanation for the N-Queens Problem — just like we did for Knapsack:
+We’ll cover the concept, real-life meaning, example, step-by-step logic, backtracking explanation, complexity, and viva Q&A.
+Then after you fully understand it, we’ll move to the Python and Java codes.
+
+🧠 Practical 5: N-Queens Problem (Using Backtracking)
+
+🎯 Problem Statement
+	Design an N×N chessboard and place N queens such that no two queens attack each other.
+The first queen’s position is already given, and we need to place the remaining queens using a backtracking approach.
+
+🏰 Understanding the Problem
+	• A Queen in chess can move any number of squares:
+		○ Vertically
+		○ Horizontally
+		○ Diagonally
+So, if two queens are placed on the same:
+	• Row → ❌ Attack possible
+	• Column → ❌ Attack possible
+	• Diagonal → ❌ Attack possible
+Hence, we need to place all N queens such that none of these conflicts occur.
+
+♟️ Example: 4 Queens Problem (N = 4)
+We must place 4 queens on a 4×4 board such that none attack each other.
+A valid solution looks like:
+. Q . .
+. . . Q
+Q . . .
+. . Q .
+or
+. . Q .
+Q . . .
+. . . Q
+. Q . .
+Each “Q” is a queen, and “.” means an empty square.
+✅ In both, no two queens share the same row, column, or diagonal.
+
+🧩 Step-by-Step Working (Concept)
+	1. Start in the first column.
+	2. Place the first queen in a safe row (if given, start there).
+	3. Move to the next column.
+	4. Try placing the next queen in a safe row:
+		○ If safe → place it and move ahead.
+		○ If no safe position → backtrack (remove the previous queen and try a new position).
+	5. Continue until all queens are placed or no solution exists.
+
+🔁 Backtracking Explained Simply
+Backtracking means:
+	“Try → if it works, continue; if not, go back and try another possibility.”
+In N-Queens:
+	• You try placing queens column by column.
+	• If placing a queen causes a conflict later,
+→ you go back (backtrack) to move it to a new safe spot.
+It’s like exploring all possible configurations but efficiently rejecting wrong paths early.
+
+🧮 Example: 4-Queen Step Visualization
+1️⃣ Place Queen 1 at (Row 0, Col 0)
+2️⃣ Move to Column 1 → No safe spot (since attacked by Queen 1 diagonally or horizontally).
+→ Backtrack Queen 1 to (Row 1, Col 0).
+3️⃣ Try again until you find a configuration where all 4 queens are placed safely.
+The recursive function explores every column and tries each possible row.
+
+🧠 Algorithm Steps (Backtracking)
+1. Start with an empty board.
+2. Place the first queen in the first column (given or chosen).
+3. For each column:
+   a. Try placing a queen in each row.
+   b. If placing it is safe → mark it and move to next column.
+   c. If no row is safe → backtrack (remove previous queen).
+4. Repeat until all columns are filled.
+5. Print the board when all queens are placed.
+
+
+⚙️ Safe Position Check (Core Logic)
+To check if a queen can be safely placed at board[row][col]:
+	1. Same Row Left Side → No queen should be present.
+	2. Upper Left Diagonal → No queen on upper-left diagonal.
+	3. Lower Left Diagonal → No queen on lower-left diagonal.
+We only check the left side, because queens are being placed column by column (right side is empty so far).
+
+🧾 Example Output (N = 4)
+Solution 1:
+. Q . .
+. . . Q
+Q . . .
+. . Q .
+Solution 2:
+. . Q .
+Q . . .
+. . . Q
+. Q . .
+
+🧩 Time and Space Complexity
+Aspect	Complexity
+Time	O(N!) — because we may explore all row placements
+Space	O(N²) — to store the board (or O(N) if optimized using arrays)
+
+⚙️ Problem Characteristics
+Property	Description
+Problem Type	Constraint Satisfaction
+Technique Used	Backtracking
+Deterministic?	Yes
+Greedy Works?	❌ No
+Recursive?	✅ Yes
+Optimal Solution?	Not numerical — all valid configurations are acceptable
+
+💡 Real-Life Analogy
+Imagine arranging N people in N rooms,
+but each person must not be in conflict (same row/column/diagonal).
+You test one arrangement, and if someone conflicts, you adjust — this is backtracking.
+
+🎓 Viva Questions with Answers
+Question	Answer
+1️⃣ What is the N-Queens problem?	It’s a problem of placing N queens on an N×N chessboard so that no two queens attack each other.
+2️⃣ What is the condition for attacking?	Same row, same column, or diagonal.
+3️⃣ What algorithm is used?	Backtracking.
+4️⃣ What does backtracking mean?	Trying possible solutions recursively and undoing wrong ones.
+5️⃣ What is the time complexity?	O(N!).
+6️⃣ Why do we check only the left side?	Because we place queens column by column from left to right.
+7️⃣ Can greedy algorithm solve N-Queens?	No, because local choices don’t lead to global solutions.
+8️⃣ What are base and recursive conditions?	Base → all queens placed; Recursive → try to place a queen safely in each column.
+9️⃣ How many solutions exist for N=4?	Two.
+🔟 What kind of problem is it?	A classic constraint satisfaction problem solved using backtracking.
+
+
+

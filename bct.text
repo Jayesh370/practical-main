@@ -1,0 +1,415 @@
+
+💻 Q.1 Solidity Code Explained — Bank2.sol
+// SPDX-License-Identifier: MIT
+🔹 SPDX License Identifier
+	• It specifies the license type of your code.
+	• Here MIT means you are allowing others to reuse or modify this code freely (open source).
+	• It’s mandatory for Solidity compiler to avoid warnings.
+
+pragma solidity ^0.8.0;
+🔹 Pragma Directive
+	• Tells compiler which Solidity version to use.
+	• Here ^0.8.0 means “use compiler version 0.8.0 or higher, but less than 0.9.0”.
+	• Solidity 0.8.x automatically protects from integer overflow/underflow.
+
+contract Bank2 {
+🔹 Contract Declaration
+	• contract is like a class in OOP (Object-Oriented Programming).
+	• Everything related to your smart contract (data, functions) is written inside.
+	• The name of the contract is Bank2.
+
+    address public owner;       // Account owner address
+🔹 Declares a variable owner
+	• Type address means it stores an Ethereum wallet address (like 0xabc...).
+	• public means anyone can view it (compiler creates a getter automatically).
+	• owner will represent the account that deployed the contract.
+
+    uint256 private balance;    // Store account balance
+🔹 Declares a variable balance
+	• Type uint256 means unsigned integer (only positive values).
+	• private means it can only be accessed from inside this contract.
+	• It keeps track of the total Ether stored in the contract.
+
+// Constructor runs only once when deployed
+    constructor() {
+        owner = msg.sender;
+        balance = 0;
+    }
+🔹 Constructor Function
+	• Runs only once when contract is deployed on blockchain.
+	• msg.sender is a special global variable in Solidity — it means the address that is currently interacting with the contract.
+	• So, owner = msg.sender; saves the deployer’s wallet address as the contract owner.
+	• Then we initialize balance = 0.
+✅ After deployment, only this owner will be able to withdraw funds.
+
+// Deposit Ether into contract
+    function deposit() public payable {
+        balance += msg.value;   // msg.value is amount sent (in wei)
+    }
+🔹 Deposit Function
+	• public → anyone can call it.
+	• payable → allows the function to receive Ether.
+	• When someone sends Ether with this function, Solidity automatically stores it in the contract.
+	• msg.value → contains the amount of Ether (in wei) sent with the transaction.
+	• It increases the internal balance variable by msg.value.
+💡 1 Ether = 10¹⁸ wei
+
+// Withdraw Ether from contract
+    function withdraw(uint256 amount) public {
+        require(msg.sender == owner, "Only owner can withdraw");
+        require(amount <= balance, "Insufficient funds");
+        balance -= amount;
+        payable(owner).transfer(amount);
+    }
+🔹 Withdraw Function
+	• public means anyone can call — but we’ll check if they’re the owner.
+	• require(condition, message) ensures the condition is true; otherwise it stops execution and returns an error message.
+		○ First check → only owner can withdraw.
+		○ Second check → withdrawal amount ≤ available balance.
+	• Subtracts the amount from the balance.
+	• payable(owner).transfer(amount) → actually sends the Ether to owner’s address.
+✅ Ensures security and ownership control.
+
+// View current balance (in Ether)
+    function getBalance() public view returns (uint256) {
+        return balance;
+    }
+🔹 Getter Function for Balance
+	• view → read-only, does not change blockchain state.
+	• returns (uint256) → function outputs a number (the balance).
+	• Returns the contract’s total balance stored in the balance variable.
+✅ Can be used to check current balance anytime.
+
+// Fallback function (if Ether is sent without calling deposit)
+    receive() external payable {
+        balance += msg.value;
+    }
+🔹 Receive Function (Fallback)
+	• This special function is called automatically when someone sends Ether directly to the contract address (without calling deposit()).
+	• external → can be called from outside only.
+	• payable → can receive Ether.
+	• It simply adds msg.value to balance.
+✅ Prevents Ether from being lost when users forget to call deposit().
+
+}
+🔹 Marks the end of the contract.
+
+🧠 Summary (for Viva and Record File)
+Keyword	Meaning
+msg.sender	Address of caller (who executed function)
+msg.value	Amount of Ether sent with transaction
+payable	Enables a function or address to receive Ether
+require()	Validates conditions, stops execution on failure
+constructor()	Runs only once during deployment
+view	Read-only function
+receive()	Handles direct Ether transfers
+address payable	Address that can receive Ether
+balance	Stored total amount in contract
+
+⚙️ Working Process (Step-by-Step)
+1️⃣ Deploy contract → The deployer becomes the owner.
+2️⃣ Deposit Ether → Call deposit() and send Ether.
+3️⃣ Withdraw Ether → Owner calls withdraw(amount) to get funds back.
+4️⃣ Get Balance → Anyone can call getBalance().
+5️⃣ Send directly → Even if user sends Ether directly to contract address, receive() stores it safely.
+
+💬 Common Viva Questions
+Question	Answer
+What is the purpose of msg.sender?	To identify the address that called the function.
+Why is the deposit function payable?	Because it needs to receive Ether.
+What does require() do?	Validates a condition; reverts if false.
+Can anyone withdraw Ether?	No, only the owner (checked by require).
+What is the role of receive()?	To handle Ether sent without calling any function.
+What unit is msg.value in?	Wei (1 Ether = 10¹⁸ wei).
+What happens if withdraw > balance?	Transaction fails with “Insufficient funds” error.
+
+
+
+💻 Q.2 Solidity Code Explained — EmployeeData.sol
+
+// SPDX-License-Identifier: MIT
+🔹 SPDX License Identifier
+	• Specifies the license type of the source code.
+	• Here, MIT license means open-source and free to reuse.
+	• Required to avoid compiler warnings.
+
+pragma solidity ^0.8.0;
+🔹 Pragma Directive
+	• Tells compiler which Solidity version to use.
+	• Here ^0.8.0 means any version greater than or equal to 0.8.0 but less than 0.9.0.
+	• Solidity 0.8.x automatically includes safety checks like overflow prevention.
+
+contract EmployeeData {
+🔹 Contract Declaration
+	• contract keyword defines a new smart contract (similar to a class in other languages).
+	• Contract name is EmployeeData.
+	• Everything — variables, data structures, and functions — will be written inside this block.
+
+    // Structure to hold employee details
+    struct Employee {
+        uint id;
+        string name;
+        uint salary;
+        string joiningDate;
+    }
+🔹 Structure Declaration
+	• The struct keyword creates a user-defined data type that groups related information together.
+	• Here, it defines a data model for one employee with four fields:
+		○ id → Employee ID (numeric, unsigned integer)
+		○ name → Employee name (string)
+		○ salary → Employee salary (unsigned integer)
+		○ joiningDate → Employee joining date (string)
+🧠 This is like creating a blueprint (template) for employee data.
+
+    // Array to store multiple employees
+    Employee[] public employees;
+🔹 Dynamic Array Declaration
+	• Employee[] means an array that can hold multiple Employee structures.
+	• public means anyone can read it directly (compiler creates an automatic getter).
+	• Initially, this array is empty.
+✅ Whenever you add a new employee, it will be stored in this array.
+
+    // Add a new employee
+    function addEmployee(
+        uint _id,
+        string memory _name,
+        uint _salary,
+        string memory _joiningDate
+    ) public {
+        employees.push(Employee(_id, _name, _salary, _joiningDate));
+    }
+🔹 Function: addEmployee()
+	• This is a public function that adds a new employee record to the blockchain.
+	• Parameters:
+		○ _id → Employee ID number
+		○ _name → Employee name
+		○ _salary → Employee salary
+		○ _joiningDate → Date of joining
+Important keywords:
+	• string memory → tells Solidity to store the string temporarily in memory (used for function parameters).
+	• employees.push() → adds a new record at the end of the array.
+	• Inside push(), we create a new Employee struct using the given inputs.
+🧩 Each time you call addEmployee(), a new employee record is permanently stored on the blockchain.
+
+    // Get employee details by index
+    function getEmployee(uint index)
+        public
+        view
+        returns (uint, string memory, uint, string memory)
+    {
+        Employee memory e = employees[index];
+        return (e.id, e.name, e.salary, e.joiningDate);
+    }
+🔹 Function: getEmployee()
+	• Purpose: Retrieve one employee’s data using their index (position) in the array.
+	• Parameters:
+		○ index → position in the employees array (starting from 0)
+	• view → means this function only reads data; it does not modify the blockchain.
+	• returns → defines what values the function will return:
+		○ Employee ID (uint)
+		○ Employee Name (string)
+		○ Salary (uint)
+		○ Joining Date (string)
+Steps:
+	1. Create a temporary variable e of type Employee.
+	2. Assign it with data from employees[index].
+	3. Return all its fields.
+✅ This allows anyone to view employee details by providing an index.
+
+    // Get total number of employees
+    function getEmployeeCount() public view returns (uint) {
+        return employees.length;
+    }
+🔹 Function: getEmployeeCount()
+	• Purpose: To know how many employees have been added.
+	• public view → anyone can access; only reads data.
+	• employees.length → built-in property that gives the current size of the array.
+✅ Returns the total count of employee records stored.
+
+}
+🔹 End of Contract
+
+🧠 Summary (for Viva and Record File)
+Concept	Description
+struct	User-defined data type to store grouped fields
+Employee[]	Dynamic array to store multiple employee records
+memory	Temporary data location (used in function parameters)
+push()	Adds a new element to the array
+view	Read-only function
+returns	Specifies output types
+length	Built-in property to get array size
+index	Position of element in array (starts from 0)
+
+⚙️ How the Contract Works Step-by-Step
+1️⃣ Deploy the contract — creates an empty employees array.
+2️⃣ Add Employee — Call addEmployee() with details like:
+(1, "Jayesh", 50000, "2025-05-10")
+→ A new record is added to the blockchain.
+3️⃣ Get Employee — Call getEmployee(0) to get details of the first employee.
+Output:
+1, "Jayesh", 50000, "2025-05-10"
+4️⃣ Get Employee Count — Call getEmployeeCount() → returns total number of employees stored.
+
+🧩 Real Example
+Step	Input	Output
+addEmployee(1, "Jayesh", 40000, "2025-01-10")	—	Employee added
+addEmployee(2, "Sneha", 45000, "2025-02-05")	—	Employee added
+getEmployee(1)	—	(2, "Sneha", 45000, "2025-02-05")
+getEmployeeCount()	—	2
+
+💬 Common Viva Questions
+Question	Answer
+What is the purpose of struct?	To group related data under one type.
+What is an array in Solidity?	A data structure to store multiple elements of the same type.
+What is dynamic array?	Array that grows in size using push().
+What does the memory keyword mean?	Temporary storage area for data during function execution.
+Why is getEmployee() marked as view?	It only reads blockchain data, doesn’t change it.
+What does employees.length return?	The number of employees stored.
+Can we delete an employee?	Yes, but that function is not defined here.
+What will happen if we call getEmployee(5) when there are only 2 employees?	It will throw an “index out of bounds” error.
+
+🧾 Final Summary for Record File
+Aim:
+To write a Solidity program to display employee details using structure, deploy it on Ethereum, and observe gas values.
+Theory:
+	• struct used to group employee data.
+	• Array used to store multiple records.
+	• Functions addEmployee(), getEmployee(), and getEmployeeCount() are used for adding, retrieving, and counting employees.
+Result:
+Program successfully compiled and executed on Remix IDE. Employee data added, retrieved, and count verified.
+
+
+
+
+This version — StudentRegistry — is also 100% correct, professional, and exam-ready.
+Let’s break it down line by line and then compare it directly with your problem statement to confirm if it meets all required constructs (✅ Structures ✅ Arrays ✅ Fallback ✅ Gas observation-ready).
+
+💻 Code Explanation — StudentRegistry.sol
+// SPDX-License-Identifier: MIT
+✅ License identifier — mandatory for modern Solidity.
+
+pragma solidity ^0.8.0;
+✅ Compiler version — uses the safe 0.8.x series (automatic overflow protection).
+
+contract StudentRegistry {
+Starts the contract block named StudentRegistry.
+Everything inside this defines data and behavior of the contract.
+
+    struct Student {
+        string name;
+        uint256 age;
+    }
+🧩 Structure
+	• Defines how a single student record looks.
+	• Each Student has:
+		○ name → stored as string (dynamic text)
+		○ age → unsigned integer
+	Construct Used: ✔ Structure
+
+    Student[] private students;
+📦 Array
+	• A dynamic array that stores multiple Student structs.
+	• Marked private, meaning it can’t be read directly from outside (you must use getter functions).
+	Construct Used: ✔ Array
+
+    // Define an event to log the received Ether value
+    event ReceivedEther(address indexed sender, uint256 value);
+🔔 Event
+	• An event is a log message recorded on the blockchain.
+	• Whenever Ether is received, this event will emit the sender’s address and amount.
+	This helps you prove that the fallback actually ran.
+
+    receive() external payable {
+        // This function can receive Ether, but it doesn't do anything in this example.
+        // Log the received Ether value
+        emit ReceivedEther(msg.sender, msg.value);
+    }
+💰 receive() Function
+	• Triggered automatically when someone sends Ether directly to the contract.
+	• external payable → allows receiving Ether.
+	• Emits an event to show who sent and how much.
+	Construct Used: ✔ Fallback/Receive mechanism (for Ether handling)
+
+    fallback() external payable {
+        // Fallback function to receive Ether
+        emit ReceivedEther(msg.sender, msg.value);
+    }
+⚙️ fallback() Function
+	• Executes when someone calls a non-existent function or sends Ether with data.
+	• Also payable so the contract won’t reject the transfer.
+	• Logs the event again.
+	Construct Used: ✔ Fallback
+
+    function addStudent(string memory name, uint256 age) public {
+        students.push(Student(name, age));
+    }
+🧱 addStudent()
+	• Public function that adds a new student to the array.
+	• memory keyword → temporary storage for string parameter.
+	• push() → appends a new struct to the array.
+
+    function getStudent(uint256 index) public view returns (string memory, uint256) {
+        require(index < students.length, "Student not found");
+        return (students[index].name, students[index].age);
+    }
+🔍 getStudent()
+	• Reads student details by array index.
+	• require() → prevents invalid index access.
+	• view → read-only, so it doesn’t consume gas when called externally.
+
+    function getStudentCount() public view returns (uint256) {
+        return students.length;
+    }
+🔢 getStudentCount()
+	• Returns total number of students in the array.
+	• view → no gas on read.
+
+🧠 Does This Match the Practical Problem Statement?
+Requirement	Present in Code	Explanation
+Structures	✅	struct Student { string name; uint256 age; }
+Arrays	✅	Student[] private students;
+Fallback Function	✅	Both fallback() and receive() are implemented
+Deploy on Ethereum	✅	Works directly in Remix IDE
+Observe Gas & Fee	✅	Each transaction (addStudent) uses measurable gas in Remix
+✅ ✅ ✅ — Completely fulfills the practical question!
+
+⚙️ Testing Example (Remix IDE)
+Step 1. Deploy
+Select environment JavaScript VM (London) → Click Deploy
+Step 2. Add Students
+addStudent("Jayesh", 21)
+addStudent("Sneha", 22)
+Step 3. Retrieve
+getStudent(0) → "Jayesh", 21
+getStudentCount() → 2
+
+Step 4. Test Ether Receive
+In Remix:
+	• Select contract’s deployed instance.
+	• Enter Value → 1 ether
+	• Click Transact (no function name)
+→ receive() runs → Event ReceivedEther appears in Remix console.
+
+💰 Gas Observation (Typical Values)
+Action	Gas Used	Comment
+Deploy Contract	~170 000	One-time deployment
+addStudent()	~60 000–70 000	Storage write (costly)
+getStudent()	0	View call — read only
+Ether Transfer	~21 000	Base transaction gas
+
+💬 Viva Questions
+Question	Short Answer
+What is a structure?	A user-defined type that groups multiple data fields.
+What is a dynamic array?	An array that can grow or shrink at runtime.
+What is the purpose of fallback()?	To handle invalid function calls or unexpected data.
+Difference between fallback() and receive()?	receive() runs for plain Ether; fallback() runs for invalid calls or data.
+Why is payable used?	To allow the contract to accept Ether.
+What is an event in Solidity?	A log record stored on blockchain, viewable in transaction history.
+How to check gas cost?	In Remix under each transaction details.
+
+✅ Verdict
+✔ Technically correct
+✔ Matches all constructs in the question
+✔ Professional version (includes event logging)
+✔ Perfect for deployment on Remix
+✔ Excellent for Viva and Record Book

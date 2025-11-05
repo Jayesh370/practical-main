@@ -1,0 +1,398 @@
+
+🧩 PRACTICAL — K-Means Clustering on Sales Data
+Problem:
+	Implement K-Means clustering on sales_data_sample.csv and determine the number of clusters using the Elbow Method.
+
+🧠 Cell 1: Import Required Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import warnings
+from sklearn.preprocessing import StandardScaler
+warnings.filterwarnings('ignore')
+🔍 Explanation:
+	• pandas → used to load and handle dataset (CSV files, tables).
+	• matplotlib.pyplot → for plotting graphs and visualizations.
+	• KMeans → the main machine learning algorithm for clustering.
+	• StandardScaler → used to scale (normalize) data before clustering.
+	• warnings.filterwarnings('ignore') → hides unnecessary warning messages while running code.
+🧩 Purpose:
+These libraries are like “tools” you import before doing your analysis.
+
+🧠 Cell 2: Load Dataset
+df = pd.read_csv('./Datasets/sales_data_sample.csv', encoding='ISO-8859-1')
+df
+🔍 Explanation:
+	• pd.read_csv() → reads the CSV file and stores it into a DataFrame called df.
+	• './Datasets/sales_data_sample.csv' → path to your dataset.
+	• encoding='ISO-8859-1' → used because the dataset may contain special characters (like in customer names).
+	• Writing only df in a Jupyter cell displays the first few rows.
+🧩 Purpose:
+To load your dataset into memory so you can work with it.
+
+🧠 Cell 3: Understand the Data
+df.describe()
+df.info()
+🔍 Explanation:
+	• df.describe() → gives statistical details (mean, min, max, etc.) for numeric columns.
+Example output:
+QUANTITYORDERED | PRICEEACH | SALES | ...
+count  mean  std  min  max
+
+	• df.info() → shows column names, data types (int, float, object), and number of missing values.
+🧩 Purpose:
+You get to know what kind of data you have — numbers, text, missing values, etc.
+
+🧠 Cell 4: Select Columns for Clustering
+df = df[['ORDERLINENUMBER', 'SALES']]
+🔍 Explanation:
+	• The dataset has many columns (like customer name, product line, etc.), but you only select numeric columns that make sense for clustering.
+	• Here, you choose:
+		○ ORDERLINENUMBER → the sequence number of an item in an order.
+		○ SALES → total sales amount.
+🧩 Purpose:
+Clustering needs numbers, not text — you’re focusing on two measurable variables.
+
+🧠 Cell 5: Scale (Normalize) the Data
+scaler = StandardScaler()
+scaled_values = scaler.fit_transform(df.values)
+🔍 Explanation:
+	• StandardScaler() standardizes data so that each column has:
+		○ Mean = 0
+		○ Standard deviation = 1
+	• fit_transform() both learns the scaling (fit) and applies it (transform).
+	• df.values extracts the raw numeric values from the DataFrame.
+🧩 Purpose:
+Scaling ensures that large numbers like SALES don’t overpower smaller ones like ORDERLINENUMBER.
+K-Means uses distance — so all features should be on the same scale.
+
+🧠 Cell 6: Elbow Method (Find Best K)
+wcss = []
+for i in range(1, 11):
+    model = KMeans(n_clusters=i, init='k-means++')
+    model.fit_predict(scaled_values)
+    wcss.append(model.inertia_)
+plt.plot(range(1, 11), wcss, 'ro-')
+plt.show()
+🔍 Explanation:
+	• wcss = [] → create an empty list to store inertia values (Within Cluster Sum of Squares).
+	• for i in range(1, 11) → test for different cluster counts (K = 1 to 10).
+	• KMeans(n_clusters=i, init='k-means++') → creates a KMeans model with i clusters.
+		○ init='k-means++' helps start with smarter centroids.
+	• fit_predict() → runs the model and assigns each data point to a cluster.
+	• model.inertia_ → stores the total distance between data points and their nearest cluster centers (WCSS).
+	• Append each inertia to the list wcss.
+	• Plot K vs WCSS → shows how inertia changes with K.
+🧩 Purpose:
+You are testing how many clusters make sense by observing where the curve bends (the "elbow").
+
+🧠 Cell 7: Apply K-Means with Chosen K
+model = KMeans(n_clusters=4, init='k-means++')
+clusters = model.fit_predict(scaled_values)
+df['Cluster'] = clusters
+🔍 Explanation:
+	• n_clusters=4 → from the Elbow graph, you decided K = 4 gives the best result.
+	• fit_predict() → runs the K-Means algorithm:
+		1. Finds 4 cluster centers.
+		2. Assigns each record to the nearest cluster.
+	• df['Cluster'] = clusters → adds a new column in your dataset to label each record with its cluster number (0,1,2,3).
+🧩 Purpose:
+Actually perform the clustering and record which cluster each data point belongs to.
+
+🧠 Cell 8: Check Inertia Value
+model.inertia_
+🔍 Explanation:
+	• Displays the final inertia (WCSS) for K=4.
+	• Example output: 1709.25
+	• This shows how tight your clusters are.
+🧩 Purpose:
+To measure how good the clustering is — smaller = better (but not always lowest, as explained in Elbow Method).
+
+🧠 Cell 9: Visualize Clusters
+plt.scatter(df['ORDERLINENUMBER'], df['SALES'], c=model.labels_)
+plt.show()
+🔍 Explanation:
+	• plt.scatter() → plots each point based on ORDERLINENUMBER (x-axis) and SALES (y-axis).
+	• c=model.labels_ → colors each point based on its cluster.
+	• plt.show() → displays the scatter plot.
+🧩 Purpose:
+To visually see how the data points are grouped into clusters.
+
+🧾 Summary of Each Step
+Step	Code	What It Does
+1	import ...	Load necessary libraries
+2	pd.read_csv()	Load dataset
+3	df.info()	Check data summary
+4	Select columns	Keep only numeric data
+5	StandardScaler()	Normalize data
+6	Loop with KMeans	Apply Elbow Method
+7	KMeans(n_clusters=4)	Perform clustering
+8	model.inertia_	Check compactness of clusters
+9	plt.scatter()	Visualize the clusters
+
+🧮 How the Algorithm Works (Conceptually)
+	1. Choose K = 4
+	2. Randomly select 4 points as initial centroids.
+	3. Assign data points to the nearest centroid (based on distance).
+	4. Recalculate centroids (mean position of points in each cluster).
+	5. Repeat until centroids stop changing.
+
+🎤 Viva Questions (with Answers)
+Question	Answer
+What is K-Means?	It’s an unsupervised algorithm that groups data into K clusters based on distance.
+What is the Elbow Method?	A graphical method to find the best K by plotting K vs WCSS.
+What is inertia?	The total distance of all points to their nearest cluster center.
+What does fit_predict() do?	Fits the model and assigns each point to a cluster.
+Why do we use StandardScaler?	To normalize all features so they have equal importance.
+What is init='k-means++'?	A smart way to choose starting centroids for faster convergence.
+How did you decide K?	From the elbow curve where inertia starts to flatten (K=4).
+What is unsupervised learning?	A type of learning without labels, where we find patterns in data.
+What does each color in scatter plot show?
+
+
+	Each color represents a different cluster.
+🧩 PRACTICAL 4 — K-Nearest Neighbors (KNN) on Diabetes Dataset
+Problem Statement:
+        Implement KNN algorithm on diabetes.csv dataset and compute confusion matrix, accuracy, error rate, precision, and recall.
+
+🧠 Step 1: Import Necessary Libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, classification_report
+📘 Explanation:
+Library
+Purpose
+pandas
+Used to load and handle datasets (CSV files, tables).
+numpy
+Used for mathematical operations.
+train_test_split
+Splits your data into training and testing sets.
+StandardScaler
+Scales (normalizes) numeric data so all features are on the same scale.
+KNeighborsClassifier
+KNN algorithm — used for classification (predicts the class).
+metrics
+Used to evaluate how well your model performs (accuracy, confusion matrix, etc.).
+🧩 Purpose:
+Before you start machine learning, you must import all the tools you need.
+
+🧠 Step 2: Load the Dataset
+df = pd.read_csv("diabetes.csv")
+📘 Explanation:
+        • Reads the dataset named diabetes.csv into a pandas DataFrame named df.
+        • Each row represents a patient, and columns represent medical measurements like:
+                ○ Pregnancies, Glucose, BloodPressure, Insulin, BMI, etc.
+        • The column Outcome (0 or 1) is the target variable, where:
+                ○ 0 → No diabetes
+                ○ 1 → Has diabetes
+🧩 Purpose:
+Load the data you’ll train the KNN model on.
+
+🧠 Step 3: Display First 5 Rows
+df.head()
+📘 Explanation:
+        • Shows the first 5 records (rows) of your dataset.
+        • Helps verify that the data loaded correctly and columns look right.
+🧩 Purpose:
+Quickly preview the dataset.
+
+🧠 Step 4: Get Dataset Information
+print(df.info())
+📘 Explanation:
+        • Displays column names, data types (int, float), and non-null (non-missing) counts.
+        • Ensures data is clean and all columns have correct data types.
+🧩 Purpose:
+Check for data types and missing values before preprocessing.
+
+🧠 Step 5: Check Missing Values
+print("\nMissing values in each column:\n", df.isnull().sum())
+📘 Explanation:
+        • df.isnull() → checks which cells have missing values (True/False).
+        • .sum() → counts total missing values per column.
+        • Usually, diabetes dataset has no missing values, but always good to check.
+🧩 Purpose:
+To make sure data is clean before applying the algorithm.
+
+🧠 Step 6: Separate Features (X) and Target (y)
+X = df.drop('Outcome', axis=1)  # Independent variables
+y = df['Outcome']               # Dependent variable
+📘 Explanation:
+        • X → all input features (like Glucose, BMI, Age, etc.) — independent variables.
+        • y → target label (Outcome = 0 or 1) — dependent variable.
+        • axis=1 → means drop the column (not row).
+🧩 Purpose:
+You need to separate input data (X) and output labels (y) before training.
+
+🧠 Step 7: Split Data into Training and Testing Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+📘 Explanation:
+        • Splits the dataset into:
+                ○ 80% → training data (for model learning)
+                ○ 20% → testing data (for evaluating model performance)
+        • random_state=42 ensures results are repeatable (same random split each time).
+🧩 Purpose:
+Train on one part of data and test how well it performs on unseen data.
+
+🧠 Step 8: Scale (Normalize) the Data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+📘 Explanation:
+        • KNN uses distance (Euclidean distance) between points.
+        • If one column has large values (like Glucose = 100) and another has small (like BMI = 1), large ones dominate.
+        • StandardScaler() standardizes all features to same scale (mean = 0, standard deviation = 1).
+🧩 Purpose:
+To make sure all features contribute equally when calculating distances.
+
+🧠 Step 9: Create KNN Classifier
+knn = KNeighborsClassifier(n_neighbors=18)
+📘 Explanation:
+        • Creates a KNN model where k = 18.
+        • Means: for each test data point, the algorithm looks at the 18 nearest training points (neighbors) to decide the class (0 or 1).
+        • The most common class among those 18 neighbors becomes the prediction.
+🧩 Purpose:
+Define the model — KNN uses majority voting among nearest points.
+
+🧠 Step 10: Train the Model
+knn.fit(X_train, y_train)
+📘 Explanation:
+        • Fits (trains) the KNN model using training data.
+        • In KNN, “training” means storing all training data because it’s a “lazy learner” — it doesn’t build a formula, it memorizes data.
+🧩 Purpose:
+Prepare the model so it can make predictions on unseen data.
+
+🧠 Step 11: Predict on Test Data
+y_pred = knn.predict(X_test)
+📘 Explanation:
+        • Uses the trained model to predict the diabetes outcome (0 or 1) for test patients.
+        • Stores predictions in y_pred.
+🧩 Purpose:
+To test how accurately the model predicts unseen data.
+
+🧠 Step 12: Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:\n", cm)
+📘 Explanation:
+        • The confusion matrix shows counts of:
+                ○ True Positives (TP) — correctly predicted “diabetic”
+                ○ True Negatives (TN) — correctly predicted “non-diabetic”
+                ○ False Positives (FP) — predicted diabetic but actually not
+                ○ False Negatives (FN) — predicted non-diabetic but actually diabetic
+Example:
+[[90 10]
+ [20 34]]
+TN=90, FP=10, FN=20, TP=34
+🧩 Purpose:
+To understand how the model performs in detail.
+
+🧠 Step 13: Calculate Performance Metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+error_rate = 1 - accuracy
+📘 Explanation:
+Metric
+Formula
+Meaning
+Accuracy
+(TP + TN) / Total
+How many predictions are correct overall
+Precision
+TP / (TP + FP)
+Of those predicted positive, how many are actually positive
+Recall
+TP / (TP + FN)
+Of all actual positive cases, how many were correctly found
+Error Rate
+1 - Accuracy
+How often the model is wrong
+🧩 Purpose:
+To measure the effectiveness of your classifier.
+
+🧠 Step 14: Display Metrics
+print(f"\nAccuracy: {accuracy:.4f}")
+print(f"Error Rate: {error_rate:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+📘 Explanation:
+        • :.4f → shows results up to 4 decimal places.
+        • Prints all key metrics neatly for interpretation.
+🧩 Purpose:
+To clearly show how well the model performs.
+
+🧠 Step 15: Classification Report
+print('Classification Report\n', classification_report(y_test, y_pred))
+📘 Explanation:
+        • Gives a summary report including:
+                ○ Precision
+                ○ Recall
+                ○ F1-score (harmonic mean of precision & recall)
+                ○ Support (number of test samples per class)
+Example:
+              precision    recall  f1-score   support
+0             0.85         0.93     0.89       100
+1             0.77         0.61     0.68        50
+🧩 Purpose:
+To get a full performance summary for both classes (diabetic vs non-diabetic).
+
+🧾 Summary of the Steps
+Step
+Description
+1
+Import libraries
+2
+Load dataset
+3
+Explore and clean data
+4
+Split features (X) and target (y)
+5
+Train-test split
+6
+Scale features
+7
+Create KNN model
+8
+Train model
+9
+Predict output
+10
+Evaluate with confusion matrix
+11
+Print accuracy, precision, recall, and classification report
+
+🎤 Common Viva Questions (and Answers)
+Question
+Answer
+What type of algorithm is KNN?
+It’s a supervised classification algorithm.
+What does “K” mean?
+Number of nearest neighbors to consider.
+How does KNN classify a new point?
+By taking a majority vote from its K nearest neighbors.
+Why do we scale data in KNN?
+Because it depends on distance; unscaled data gives wrong results.
+What is the confusion matrix?
+A table that shows predicted vs actual classifications.
+What is precision?
+Out of all predicted positives, how many are truly positive.
+What is recall?
+Out of all actual positives, how many were found correctly.
+How do you find the best K?
+Try different K values and pick the one with highest accuracy.
+Is KNN a parametric or non-parametric model?
+Non-parametric — it makes no assumptions about data distribution.
+What is the main disadvantage of KNN?
+It’s slow on large datasets and sensitive to irrelevant features.
+
+✅ Final Explanation (in Simple Words)
+        “In this practical, we used the K-Nearest Neighbors (KNN) algorithm to predict whether a patient has diabetes or not.
+        We first cleaned and scaled the data, split it into train and test sets, trained the KNN model with k=18, and then evaluated it using metrics like accuracy, precision, recall, and confusion matrix.
+        Our model achieved around 75–80% accuracy, showing it can reasonably predict diabetes based on medical data.”
+
+
+
