@@ -1,79 +1,66 @@
-import heapq
+'''
+Jayesh Borase
+Roll No. XX
+BE Computer
+RMDSSOE, Warje, Pune
+'''
 
-# Node class for Huffman Tree
+'''
+Write a program to implement Huffman Encoding using a greedy strategy.
+'''
+
+import heapq   # for priority queue (min-heap)
+
+# Step 1: Create Node class
 class Node:
-    def __init__(self, char, freq):
-        self.char = char
-        self.freq = freq
-        self.left = None
-        self.right = None
+    def __init__(self, freq, symbol, left=None, right=None):
+        self.freq = freq          # Frequency of symbol
+        self.symbol = symbol      # Character itself
+        self.left = left          # Left child
+        self.right = right        # Right child
+        self.huff = ""            # Binary code (0 or 1)
 
-    # comparison for priority queue (min-heap)
+    # To make the node work with heapq (compare using frequency)
     def __lt__(self, other):
         return self.freq < other.freq
 
-# Function to build Huffman Tree
-def build_huffman_tree(char_freq):
-    heap = [Node(char, freq) for char, freq in char_freq.items()]
-    heapq.heapify(heap)
+# Step 2: Recursive function to print Huffman codes
+def printNodes(node, val=""):
+    newval = val + node.huff
+    if node.left:
+        printNodes(node.left, newval)
+    if node.right:
+        printNodes(node.right, newval)
+    if not node.left and not node.right:  # leaf node (actual character)
+        print(f"{node.symbol} -> {newval}")
 
-    while len(heap) > 1:
-        left = heapq.heappop(heap)
-        right = heapq.heappop(heap)
-        new_node = Node(None, left.freq + right.freq)
-        new_node.left = left
-        new_node.right = right
-        heapq.heappush(heap, new_node)
+# Step 3: Take user input
+n = int(input("Enter number of characters: "))
 
-    return heap[0]  # Root node
+chars = []
+freqs = []
 
-# Generate Huffman Codes (Recursive Traversal)
-def generate_codes(node, code="", huffman_codes={}):
-    if node is None:
-        return
-    if node.char is not None:
-        huffman_codes[node.char] = code
-    generate_codes(node.left, code + "0", huffman_codes)
-    generate_codes(node.right, code + "1", huffman_codes)
-    return huffman_codes
+for i in range(n):
+    c = input(f"Enter character {i+1}: ")
+    f = int(input(f"Enter frequency of {c}: "))
+    chars.append(c)
+    freqs.append(f)
 
-# Example input
-text = "DAA PRACTICAL"
-print("Original Text:", text)
+# Step 4: Create priority queue
+nodes = []
+for i in range(n):
+    heapq.heappush(nodes, Node(freqs[i], chars[i]))
 
-# Step 1: Count frequency of each character
-freq = {}
-for char in text:
-    freq[char] = freq.get(char, 0) + 1
+# Step 5: Build Huffman Tree using greedy method
+while len(nodes) > 1:
+    left = heapq.heappop(nodes)     # smallest frequency node
+    right = heapq.heappop(nodes)    # next smallest
+    left.huff = "0"
+    right.huff = "1"
+    # combine two smallest nodes into one new node
+    newnode = Node(left.freq + right.freq, left.symbol + right.symbol, left, right)
+    heapq.heappush(nodes, newnode)
 
-print("\nCharacter Frequencies:")
-for k, v in freq.items():
-    print(f"{k}: {v}")
-
-# Step 2: Build Huffman Tree
-root = build_huffman_tree(freq)
-
-# Step 3: Generate Huffman Codes
-codes = generate_codes(root)
-print("\nHuffman Codes:")
-for char, code in codes.items():
-    print(f"{char}: {code}")
-
-# Step 4: Encode the text
-encoded_text = ''.join([codes[char] for char in text])
-print("\nEncoded Text:", encoded_text)
-
-# Step 5: Decode (optional)
-def decode(encoded_text, root):
-    decoded = ""
-    node = root
-    for bit in encoded_text:
-        node = node.left if bit == "0" else node.right
-        if node.char is not None:
-            decoded += node.char
-            node = root
-    return decoded
-
-decoded_text = decode(encoded_text, root)
-print("\nDecoded Text:", decoded_text)
-
+# Step 6: Print Huffman Codes
+print("\nHuffman Codes for characters:")
+printNodes(nodes[0])
